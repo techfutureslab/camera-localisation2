@@ -104,11 +104,11 @@ while True:
             continue
 
         robotPositionPx = (int((redPointX + grnPointX)/2) , int((redPointY + grnPointY) / 2))
-        print "robotPositionPx", robotPositionPx
+        # print
         # cv.rectangle(frame_with_keypoints, (robotPositionPx[0] - 5, robotPositionPx[1] - 5),
         #              (robotPositionPx[0] + 5, robotPositionPx[1] + 5), 2, 2)
 
-        theta = math.degrees(math.atan(deltaY/deltaX) - math.pi/4)
+        theta = math.degrees(math.atan2(deltaX,deltaY))
         # if deltaX<0 and deltaY<0:
         #     theta += 180
         #     theta = None
@@ -120,8 +120,8 @@ while True:
         #     # continue
         #     theta += 90
         #     theta = None
-
-        print "Orientation is ", theta % 360, "delta x:", deltaX, "delta Y:", deltaY
+        # % 360,
+        print "robotPositionPx", robotPositionPx, "Orientation is ", theta,  "delta x:", deltaX, "delta Y:", deltaY
 
 
     except Exception as e:
