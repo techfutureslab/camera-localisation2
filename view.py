@@ -3,6 +3,8 @@ import cv2
 import glob
 
 cam = cv2.VideoCapture(0)
+cam.set(3,1280)
+cam.set(4,720)
 
 # Get the width and height of the camera image
 ret, frame = cam.read()
