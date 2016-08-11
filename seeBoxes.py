@@ -46,4 +46,6 @@ while True:
     if wk == 1048689:
         break
 
+
+cv.imwrite("green.jpg", grn)
 cv.destroyAllWindows()
