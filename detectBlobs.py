@@ -7,7 +7,14 @@ cam = cv.VideoCapture(0)
 cam.set(3,1280)
 cam.set(4,720)
 
-robotSize = 50;
+robotSize = 50
+
+# Camera calibration parameters obtained 2016-08-11 (by Mohsen and Matthew) using captureImages.py and calibrate.py
+camera_matrix = np.array([[416.25456303, 0., 663.64459394], [0., 387.2264034, 380.49903696], [ 0., 0., 1.]])
+dist_coefs= np.array([  2.00198060e-01,  -2.28216265e-01,   2.26068631e-04, -5.00177586e-04,   5.84619782e-02])
+ret, frame = cam.read()
+h, w = frame.shape[:2]
+newcameramtx, roi = cv.getOptimalNewCameraMatrix(camera_matrix, dist_coefs, (w, h), 1, (w, h))
 
 # Setup SimpleBlobDetector parameters.
 params = cv.SimpleBlobDetector_Params()
@@ -41,7 +48,8 @@ detector = cv.SimpleBlobDetector_create(params)
 
 while True:
     ret, frame = cam.read()
-    cv.imshow("Original", (frame))
+    frame = cv.undistort(frame, camera_matrix, dist_coefs, None, newcameramtx)
+    cv.imshow("Original", frame)
 
     # Convert to HSV
     hsv_frame = cv.cvtColor(frame,cv.COLOR_BGR2HSV_FULL) #
