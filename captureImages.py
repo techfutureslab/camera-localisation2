@@ -11,9 +11,7 @@ cam.set(4,720)
 ret, frame = cam.read()
 
 h, w = frame.shape[:2]
-# time.sleep(5)
 print "Start Capturing"
-#for i in range(1,14):
 cntr = 0
 while True:
     ret, frame = cam.read()

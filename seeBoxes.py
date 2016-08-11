@@ -8,21 +8,11 @@ cam = cv.VideoCapture(0)
 cam.set(3,1280)
 cam.set(4,720)
 
-# for i in range(1,14):
-#     print i, ":", cam.get(i)
-# # time.sleep(5)
-# print "Start Capturing"
-# #for i in range(1,14):
-# cntr = 0
+
 while True:
     ret, frame = cam.read()
     hsv_frame = cv.cvtColor(frame,cv.COLOR_BGR2HSV_FULL) #
     cv.imshow("Color Frames", (frame))
-    # cv.imshow("Frames", (hsv_frame[:, :, 0]))
-
-    # red = (np.logical_or(hsv_frame[:,:,0]<30,hsv_frame[:,:,0]>149)).astype('float')
-    # grn = (np.logical_and(hsv_frame[:,:,0]>30,hsv_frame[:,:,0]<90)).astype('float')
-    # blu = (np.logical_and(hsv_frame[:,:,0]>90,hsv_frame[:,:,0]<149)).astype('float')
 
     lb = np.array([156, 50,50])
     ub = np.array([184,255,255])
