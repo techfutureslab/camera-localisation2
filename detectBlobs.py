@@ -47,9 +47,11 @@ params.minInertiaRatio = 0.01
 detector = cv.SimpleBlobDetector_create(params)
 
 while True:
+    startTime = time.time()
     ret, frame = cam.read()
+    frame = cv.flip(cv.flip(frame, 1), -1)
+    #cv.imshow("Original", frame)
     frame = cv.undistort(frame, camera_matrix, dist_coefs, None, newcameramtx)
-    cv.imshow("Original", frame)
 
     # Convert to HSV
     hsv_frame = cv.cvtColor(frame,cv.COLOR_BGR2HSV_FULL) #
@@ -64,7 +66,7 @@ while True:
     ur = np.array([241,50,50])
     urf = np.array([255, 255,255])
     maskRedLower = cv.inRange(hsv_frame,lrz, lr)
-    maskRedUpper=  cv.inRange(hsv_frame,ur, urf)
+    maskRedUpper = cv.inRange(hsv_frame,ur, urf)
     maskRed = cv.bitwise_or(maskRedLower, maskRedUpper)
     red = cv.bitwise_and(frame,frame,mask=maskRed)
 
@@ -108,7 +110,7 @@ while True:
         distanceBetweenMarkers = math.sqrt(deltaX**2 + deltaY**2)
 
         if distanceBetweenMarkers>acceptable_margin:
-            print "Unacceptably far apart:", distanceBetweenMarkers
+            print "Unacceptably far apart:", distanceBetweenMarkers, "mm"
             continue
 
         robotPositionPx = (int((redPointX + grnPointX)/2) , int((redPointY + grnPointY) / 2))
@@ -117,20 +119,7 @@ while True:
         #              (robotPositionPx[0] + 5, robotPositionPx[1] + 5), 2, 2)
 
         theta = math.degrees(math.atan2(deltaX,deltaY))
-        # if deltaX<0 and deltaY<0:
-        #     theta += 180
-        #     theta = None
-        # elif deltaX<0:
-        #     # continue
-        #     theta -= 90
-        #     theta = None
-        # elif deltaY<0:
-        #     # continue
-        #     theta += 90
-        #     theta = None
-        # % 360,
         print "robotPositionPx", robotPositionPx, "Orientation is ", theta,  "delta x:", deltaX, "delta Y:", deltaY
-
 
     except Exception as e:
         print "Exception thrown"
@@ -140,10 +129,10 @@ while True:
         cv.rectangle(frame_with_keypoints, (int(robotPositionPx[0]) - robotSize, int(robotPositionPx[1]) - robotSize),
                      (int(robotPositionPx[0]) + robotSize, int(robotPositionPx[1]) + robotSize), 2, 2)
 
+    cv.imshow("Robot Location", frame_with_keypoints)
 
-
-    cv.imshow("Keypoints", frame_with_keypoints)
-
+    endTime = time.time()
+    print "frames/sec: ", 1/(endTime-startTime)
 
     wk = cv.waitKey(1)
     if wk != -1:
