@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 import time
 import math
-
+import colorsys
 
 
 def draw_circle(event,x,y,flags,param):
@@ -53,7 +53,9 @@ class FishEyeCamera:
 
 
 class RobotDetector:
-    def __init__(self):
+    def __init__(self, numberOfColours = 3):
+        self.numberOfColours = numberOfColours
+
 
         # Setup SimpleBlobDetector parameters.
         params = cv.SimpleBlobDetector_Params()
@@ -84,13 +86,15 @@ class RobotDetector:
 
         # Create SimpleBlobDetector (assumes OpenCV version 3)
         self.detector = cv.SimpleBlobDetector_create(params)
+        self.colourHuesDegrees = [hue for hue in range(0,255,255/self.numberOfColours)]
+        self.colourHeusBandDegrees = [10]*numberOfColours
 
 
-    def calibrateColour(self, camera, numberOfColours = 5, bandWidthInStdDevs = 3):
+    def calibrateColour(self, camera, bandWidthInStdDevs = 3):
         self.colourHuesDegrees = []
         self.colourHeusBandDegrees = []
 
-        print "Calibrate the",numberOfColours,"colours.  Click on colour samples, press space when done for each colour."
+        print "Calibrate the",self.numberOfColours,"colours.  Click on colour samples, press space when done for each colour."
 
         def mouseCallbackGetColour(event, x, y, flags, param):
             if event == cv.EVENT_LBUTTONDOWN:
@@ -98,7 +102,7 @@ class RobotDetector:
                 print colourValue
                 colourSamples.append(colourValue[0])
 
-        for i in range(numberOfColours):
+        for i in range(self.numberOfColours):
             colourSamples = []
             while True:
                 # Get undistorted frame
@@ -127,11 +131,15 @@ class RobotDetector:
                     meanDelta = sum(deltaColourSamples) / len(deltaColourSamples)
                     sdDelta = math.sqrt(sum([x**2 for x in deltaColourSamples])/len(deltaColourSamples))
                     meanColour = (sourceColour + meanDelta) % 255
-                    print "mean colour: ",meanColour, "sd:", sdDelta
 
-                    self.colourHuesDegrees.append(meanColour)
-                    self.colourHeusBandDegrees.append(sdDelta * bandWidthInStdDevs)
-                    # cv.destroyWindow(windowTitle)
+                    meanColourDegrees = float(meanColour) / 255 * 360
+                    sdColourDegrees = float(sdDelta) / 255 * 360
+                    print "mean colour (degrees): ",meanColourDegrees, "sd:", sdColourDegrees
+
+
+                    self.colourHuesDegrees.append(meanColourDegrees) # convert to degrees
+                    self.colourHeusBandDegrees.append(sdColourDegrees * bandWidthInStdDevs)
+                    cv.destroyWindow(windowTitle)
                     break
 
     def findColouredPixels(self, hsvFrame, hueDegrees, hueBandDegrees=20):
@@ -168,26 +176,29 @@ class RobotDetector:
         # Convert to HSV
         global hsvFrame
         hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV_FULL)  #
-        blue = self.findColouredPixels(hsvFrame, 240,20)
-        red = self.findColouredPixels(hsvFrame, 0,20)
-        green = self.findColouredPixels(hsvFrame, 120,20)
 
-        blue_keypoints = self.detector.detect(blue)
-        red_keypoints = self.detector.detect(red)
-        green_keypoints = self.detector.detect(green)
+        masks = []
+        keypoints = []
+        for i in range(self.numberOfColours):
+            masks.append(self.findColouredPixels(hsvFrame, self.colourHuesDegrees[i], self.colourHeusBandDegrees[i]))
+            keypoints.append(self.detector.detect(masks[i]))
+
         if debug:
-            frame_with_keypoints = cv.drawKeypoints(frame, red_keypoints, np.array([]), (0, 0, 255),
+            frameWithKeypoints = frame
+            for i in range(self.numberOfColours):
+                # Show mask
+                cv.imshow("Mask #"+str(i), masks[i])
+
+                # Show keypoints
+                KeyPointColour = [255 * cl for cl in colorsys.hsv_to_rgb(float(self.colourHuesDegrees[i]) / 360, 1, 1)]
+                KeyPointColour.reverse()
+                KeyPointColour = tuple(KeyPointColour)
+
+                frameWithKeypoints = cv.drawKeypoints(frameWithKeypoints, keypoints[i], np.array([]), KeyPointColour,
                                                     cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-            frame_with_keypoints = cv.drawKeypoints(frame_with_keypoints, green_keypoints, np.array([]), (0, 255, 0),
-                                                cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-
-            frame_with_keypoints = cv.drawKeypoints(frame_with_keypoints, blue_keypoints, np.array([]), (255, 0, 0),
-                                                cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-
-            cv.imshow("Red", red)
-            cv.imshow("Green", green)
-            cv.imshow("Blue", blue)
-            cv.imshow("Key Points", frame_with_keypoints)
+            pageTitle = "Color code: "+str(self.colourHuesDegrees)
+            cv.imshow(pageTitle,frame)
+            cv.imshow("Key Points", frameWithKeypoints)
 
     def getLocation(self):
         # Calculate centre of robot
@@ -222,7 +233,7 @@ class RobotDetector:
 
 
 fishEyeCamera = FishEyeCamera(0)
-robotDetector = RobotDetector()
+robotDetector = RobotDetector(2)
 robotDetector.calibrateColour(fishEyeCamera)
 
 while True:
@@ -233,21 +244,20 @@ while True:
     # Convert to HSV
     hsvFrame = cv.cvtColor(undistortedFrame,cv.COLOR_BGR2HSV_FULL) #
 
-    robotDetector.findColouredBlobs(undistortedFrame, False)
+    robotDetector.findColouredBlobs(undistortedFrame, True)
     # green = robotDetecter.findColouredPixels(hsvFrame, 2, 10) # Green
     # cv.imshow("Green", green)
 
     wk = cv.waitKey(1)
     if wk != -1:
         print wk
-        if wk == 1048608:
-            print("hsv:", hsv_frame[320, 240,0])
-            print("rgb:", frame[320, 240])
-    if wk == 1048689:
+    if wk == 1048689: # q
         break
+
+cv.destroyAllWindows()
 exit()
 
-
+###########################################################################################################################
 
 
 

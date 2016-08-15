@@ -4,7 +4,7 @@ import time
 import math
 
 cam = cv.VideoCapture(0)
-cam.set(3,1280)
+cam.set(3,1284)
 cam.set(4,720)
 
 robotSize = 50
