@@ -129,7 +129,7 @@ class RobotDetector:
                         else:
                             deltaColourSamples.append(deltaUpColourSamples[i])
                     meanDelta = sum(deltaColourSamples) / len(deltaColourSamples)
-                    sdDelta = math.sqrt(sum([x**2 for x in deltaColourSamples])/len(deltaColourSamples))
+                    sdDelta = math.sqrt(float(sum([x**2 for x in deltaColourSamples]))/len(deltaColourSamples))
                     meanColour = (sourceColour + meanDelta) % 255
 
                     meanColourDegrees = float(meanColour) / 255 * 360
@@ -187,7 +187,9 @@ class RobotDetector:
             frameWithKeypoints = frame
             for i in range(self.numberOfColours):
                 # Show mask
-                cv.imshow("Mask #"+str(i), masks[i])
+                maskWindowName = "Mask #"+str(i)
+                cv.imshow(maskWindowName, masks[i])
+                cv.moveWindow(maskWindowName, 0, 0)
 
                 # Show keypoints
                 KeyPointColour = [255 * cl for cl in colorsys.hsv_to_rgb(float(self.colourHuesDegrees[i]) / 360, 1, 1)]

@@ -12,8 +12,8 @@ h, w = frame.shape[:2]
 
 while True:
     ret, frame = cam.read()
-    ff_frame = cv2.flip(cv2.flip(frame,1),-1)
-    cv2.imshow("Raw Image", ff_frame)
+    # ff_frame = cv2.flip(cv2.flip(frame,1),-1)
+    cv2.imshow("Raw Image", frame)
 
     key = cv2.waitKey(33)
     if key ==  1048689:  # q
