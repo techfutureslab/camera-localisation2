@@ -112,10 +112,12 @@ class RobotDetector:
 
         # Find the mean and standard deviation of the (minimum) deltas
         meanDelta = float(sum(deltaColourSamples)) / len(deltaColourSamples)
-        sdDelta = math.sqrt(float(sum([x ** 2 for x in deltaColourSamples])) / len(deltaColourSamples))
 
         # Calculate the mean colour.
         meanColour = (sourceColour + meanDelta) % 256
+
+        sdDelta = math.sqrt(float(sum([(x - meanDelta) ** 2 for x in deltaColourSamples])) / len(deltaColourSamples))
+
 
 
 
@@ -254,11 +256,13 @@ class RobotDetector:
 
 fishEyeCamera = FishEyeCamera(0)
 robotDetector = RobotDetector(2)
-# robotDetector.calibrateColour(fishEyeCamera)
+robotDetector.calibrateColour(fishEyeCamera)
 
 m1, sd1 = robotDetector.getMeanAndStdDevFromColourSamples([2,1,252])
 m2, sd2 = robotDetector.getMeanAndStdDevFromColourSamples([252,2,1])
 assert(m1==m2)
+
+print "sd1:", sd1, "sd2:",sd2
 assert(sd1 == sd2)
 # print "mean:", m, "sd:",sd
 # cv.destroyAllWindows()
