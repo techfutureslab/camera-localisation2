@@ -83,12 +83,47 @@ class RobotDetector:
         # Filter by Inertia
         params.filterByInertia = False
         params.minInertiaRatio = 0.01
-
         # Create SimpleBlobDetector (assumes OpenCV version 3)
         self.detector = cv.SimpleBlobDetector_create(params)
         self.colourHuesDegrees = [hue for hue in range(0,255,255/self.numberOfColours)]
         self.colourHeusBandDegrees = [10]*numberOfColours
 
+
+    def getMeanAndStdDevFromColourSamples(self, colourSamples):
+        '''From a list of colourSamples, find the mean and standard deviation using a delta from the first sampled
+        colour'''
+        assert len(colourSamples) > 0
+
+        # Source colour is the first of the colour samples
+        sourceColour = int(colourSamples[0])
+
+        # Go through the samples and delta between the current sample and the source.  There are two deltas, one in each
+        # direction (possibly looping over 360 degrees).
+        deltaUpColourSamples = [(int(x) - sourceColour)%256 for x in colourSamples]
+        deltaDownColourSamples = [-((sourceColour - (int(x)))%256) for x in colourSamples]
+
+        # Find the minimum of the two deltas
+        deltaColourSamples = []
+        for i in xrange(len(deltaDownColourSamples)):
+            if abs(deltaDownColourSamples[i]) <= abs(deltaUpColourSamples[i]):
+                deltaColourSamples.append(deltaDownColourSamples[i])
+            else:
+                deltaColourSamples.append(deltaUpColourSamples[i])
+
+        # Find the mean and standard deviation of the (minimum) deltas
+        meanDelta = float(sum(deltaColourSamples)) / len(deltaColourSamples)
+        sdDelta = math.sqrt(float(sum([x ** 2 for x in deltaColourSamples])) / len(deltaColourSamples))
+
+        # Calculate the mean colour.
+        meanColour = (sourceColour + meanDelta) % 256
+
+
+
+        # Convert the colours (from uint8) to degrees
+        meanColourDegrees = float(meanColour) / 255 * 360
+        sdColourDegrees = float(sdDelta) / 255 * 360
+
+        return (meanColourDegrees, sdColourDegrees)
 
     def calibrateColour(self, camera, bandWidthInStdDevs = 3):
         self.colourHuesDegrees = []
@@ -117,25 +152,9 @@ class RobotDetector:
 
                 key = cv.waitKey(1)
                 if key == 1048608:  # space
-                    # Turn colour samples into delta values
-                    assert len(colourSamples) > 0
-                    sourceColour = int(colourSamples[0])
-                    deltaDownColourSamples = [int(x)-sourceColour for x in colourSamples]
-                    deltaUpColourSamples = [int(x)+255-sourceColour for x in colourSamples]
-                    deltaColourSamples = []
-                    for i in xrange(len(deltaDownColourSamples)):
-                        if abs(deltaDownColourSamples[i])<=abs(deltaUpColourSamples[i]):
-                            deltaColourSamples.append(deltaDownColourSamples[i])
-                        else:
-                            deltaColourSamples.append(deltaUpColourSamples[i])
-                    meanDelta = sum(deltaColourSamples) / len(deltaColourSamples)
-                    sdDelta = math.sqrt(float(sum([x**2 for x in deltaColourSamples]))/len(deltaColourSamples))
-                    meanColour = (sourceColour + meanDelta) % 255
-
-                    meanColourDegrees = float(meanColour) / 255 * 360
-                    sdColourDegrees = float(sdDelta) / 255 * 360
+                    # Calculate mean and standard deviation of colour samples
+                    meanColourDegrees, sdColourDegrees = self.getMeanAndStdDevFromColourSamples(colourSamples)
                     print "mean colour (degrees): ",meanColourDegrees, "sd:", sdColourDegrees
-
 
                     self.colourHuesDegrees.append(meanColourDegrees) # convert to degrees
                     self.colourHeusBandDegrees.append(sdColourDegrees * bandWidthInStdDevs)
@@ -198,8 +217,7 @@ class RobotDetector:
 
                 frameWithKeypoints = cv.drawKeypoints(frameWithKeypoints, keypoints[i], np.array([]), KeyPointColour,
                                                     cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-            pageTitle = "Color code: "+str(self.colourHuesDegrees)
-            cv.imshow(pageTitle,frame)
+
             cv.imshow("Key Points", frameWithKeypoints)
 
     def getLocation(self):
@@ -236,7 +254,16 @@ class RobotDetector:
 
 fishEyeCamera = FishEyeCamera(0)
 robotDetector = RobotDetector(2)
-robotDetector.calibrateColour(fishEyeCamera)
+# robotDetector.calibrateColour(fishEyeCamera)
+
+m1, sd1 = robotDetector.getMeanAndStdDevFromColourSamples([2,1,252])
+m2, sd2 = robotDetector.getMeanAndStdDevFromColourSamples([252,2,1])
+assert(m1==m2)
+assert(sd1 == sd2)
+# print "mean:", m, "sd:",sd
+# cv.destroyAllWindows()
+# exit()
+
 
 while True:
     undistortedFrame = fishEyeCamera.getUndistortedFrame()

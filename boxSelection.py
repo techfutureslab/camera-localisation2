@@ -41,17 +41,11 @@ def mouseSelection(event,x,y,flags,param):
         movedY = None
         movedX = None
 
-
-
-
-
-
 def returnSampleColour(rect,frame):
     if rect:
         selectedBox = frame[rect(0):rect(1)]
         sample = selectedBox[:]
         return sample
-
 
 # Get the width and height of the camera image
 def getFrameSize():
@@ -70,9 +64,9 @@ while True:
         cv2.rectangle(frame, boxUpperLeft, (movedX, movedY), (0, 255, 0),1)
     cv2.imshow("image", frame)
     cv2.setMouseCallback('image', mouseSelection)
-    colourSample.append(returnSampleColour())
+    # colourSample.append(returnSampleColour())
     key = cv2.waitKey(33)
-    if key ==  1048689:  # q
+    if key == 1048689:  # q
         break
     elif key != -1:
         print key
