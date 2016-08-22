@@ -29,6 +29,10 @@ class FishEyeCamera:
                                                                1,
                                                                (self.width, self.height))
 
+        # TODO: The calibration parameters should really allow the undistorted image to be in real-world units.
+        # For the meantime, we need to be able to convert from pixels to real-world units
+        self.pixelsPerMillimeter = 0.5 # As at 2016-08-22
+
     def captureVideo(self, deviceID=0):
         '''Opens the camera (specified by deviceID).  Sets the resolution to 720p (1280 x 720).'''
         self.camera = cv.VideoCapture(deviceID)
@@ -56,37 +60,58 @@ class RobotDetector:
     def __init__(self, numberOfColours = 3):
         self.numberOfColours = numberOfColours
 
-
         # Setup SimpleBlobDetector parameters.
-        params = cv.SimpleBlobDetector_Params()
+        def createDetectorParameters():
+            params = cv.SimpleBlobDetector_Params()
 
-        # Change thresholds
-        params.minThreshold = 10
-        params.maxThreshold = 200
+            # Change thresholds
+            params.minThreshold = 10
+            params.maxThreshold = 200
 
-        # Filter by Colour
-        params.filterByColor = True
-        params.blobColor = 255
+            # Filter by Colour
+            params.filterByColor = True
+            params.blobColor = 255
 
-        # Filter by Area.
-        params.filterByArea = True
-        params.minArea = 150
+            # Filter by Area.
+            params.filterByArea = True
+            params.minArea = 150
 
-        # Filter by Circularity
-        params.filterByCircularity = False
-        params.minCircularity = 0.1
+            # Filter by Circularity
+            params.filterByCircularity = False
+            params.minCircularity = 0.1
 
-        # Filter by Convexity
-        params.filterByConvexity = False
-        params.minConvexity = 0.87
+            # Filter by Convexity
+            params.filterByConvexity = False
+            params.minConvexity = 0.87
 
-        # Filter by Inertia
-        params.filterByInertia = False
-        params.minInertiaRatio = 0.01
+            # Filter by Inertia
+            params.filterByInertia = False
+            params.minInertiaRatio = 0.01
+
+            return params
+
         # Create SimpleBlobDetector (assumes OpenCV version 3)
+        params = createDetectorParameters()
         self.detector = cv.SimpleBlobDetector_create(params)
         self.colourHuesDegrees = [hue for hue in range(0,255,255/self.numberOfColours)]
         self.colourHeusBandDegrees = [10]*numberOfColours
+
+        class Robot:
+            def __init__(self, colours):
+                self.colours = colours
+                self.location = None
+                self.orientation = None
+
+            def __str__(self):
+                return "colors: "+str(self.colours)+" location: "+str(self.location)+" orientation: "+str(self.orientation)
+
+        # Calculate robot indicies
+        assert (numberOfColours >= 2)
+        self.robots = []
+        for c1 in xrange(numberOfColours):
+            for c2 in xrange(c1+1, numberOfColours):
+                self.robots.append(Robot((c1,c2)))
+
 
 
     def getMeanAndStdDevFromColourSamples(self, colourSamples):
@@ -117,9 +142,6 @@ class RobotDetector:
         meanColour = (sourceColour + meanDelta) % 256
 
         sdDelta = math.sqrt(float(sum([(x - meanDelta) ** 2 for x in deltaColourSamples])) / len(deltaColourSamples))
-
-
-
 
         # Convert the colours (from uint8) to degrees
         meanColourDegrees = float(meanColour) / 255 * 360
@@ -195,14 +217,14 @@ class RobotDetector:
 
     def findColouredBlobs(self, frame, debug = False):
         # Convert to HSV
-        global hsvFrame
+        # global hsvFrame
         hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV_FULL)  #
 
         masks = []
-        keypoints = []
+        self.keypoints = []
         for i in range(self.numberOfColours):
             masks.append(self.findColouredPixels(hsvFrame, self.colourHuesDegrees[i], self.colourHeusBandDegrees[i]))
-            keypoints.append(self.detector.detect(masks[i]))
+            self.keypoints.append(self.detector.detect(masks[i]))
 
         if debug:
             frameWithKeypoints = frame
@@ -210,60 +232,101 @@ class RobotDetector:
                 # Show mask
                 maskWindowName = "Mask #"+str(i)
                 cv.imshow(maskWindowName, masks[i])
-                cv.moveWindow(maskWindowName, 0, 0)
+                # cv.moveWindow(maskWindowName, 0, 0)
 
                 # Show keypoints
                 KeyPointColour = [255 * cl for cl in colorsys.hsv_to_rgb(float(self.colourHuesDegrees[i]) / 360, 1, 1)]
                 KeyPointColour.reverse()
                 KeyPointColour = tuple(KeyPointColour)
 
-                frameWithKeypoints = cv.drawKeypoints(frameWithKeypoints, keypoints[i], np.array([]), KeyPointColour,
+                frameWithKeypoints = cv.drawKeypoints(frameWithKeypoints, self.keypoints[i], np.array([]), KeyPointColour,
                                                     cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
             cv.imshow("Key Points", frameWithKeypoints)
 
-    def getLocation(self):
-        # Calculate centre of robot
-        robotPositionPx = None
-        try:
-            grnPointX = green_keypoints[0].pt[0]
-            grnPointY = green_keypoints[0].pt[1]
 
-            redPointX = red_keypoints[0].pt[0]
-            redPointY = red_keypoints[0].pt[1]
+    def findRobot(self, robot, camera, debug=False):
+        '''Find robot assuming an unknown current location.  Scan the whole field.'''
+        # Go through all the possible keypoint pairs.  Expected distance between the two colour patches is 69mm
+        # (each of the squares has a side length of 49mm).  Rank all the possibilities based on how far away they
+        # are from this ideal distance.  Select the pair that is the closest.
+        distanceBetweenMarkers = 69 #mm
+        colour1Keypoints = self.keypoints[robot.colours[0]]
+        colour2Keypoints = self.keypoints[robot.colours[1]]
 
-            deltaY = redPointY - grnPointY
-            deltaX = redPointX - grnPointX
-            acceptable_margin = 100 * 0.514  # (0.514 px /mm as measured 2016-08-11)
-            distanceBetweenMarkers = math.sqrt(deltaX ** 2 + deltaY ** 2)
+        minimumError = None # start with undefined error
+        minimumErrorKeypoints = None
+        for keypoint1 in colour1Keypoints:
+            for keypoint2 in colour2Keypoints:
+                # Calculate distance between the two keypoints
+                distance = math.sqrt( (keypoint1.pt[0] - keypoint2.pt[0])**2 + \
+                                      (keypoint1.pt[1] - keypoint2.pt[1])**2 )
 
-            if distanceBetweenMarkers > acceptable_margin:
-                print "Unacceptably far apart:", distanceBetweenMarkers, "mm"
-                # continue
+                # Convert distance in pixels to real-world distance
+                distance /= camera.pixelsPerMillimeter
 
-            robotPositionPx = (int((redPointX + grnPointX) / 2), int((redPointY + grnPointY) / 2))
-            # print
-            # cv.rectangle(frame_with_keypoints, (robotPositionPx[0] - 5, robotPositionPx[1] - 5),
-            #              (robotPositionPx[0] + 5, robotPositionPx[1] + 5), 2, 2)
+                error = abs(distance - distanceBetweenMarkers)
+                if minimumError is None or error < minimumError:
+                    minimumError = error
+                    minimumErrorKeypoints = (keypoint1, keypoint2)
 
-            theta = math.degrees(math.atan2(deltaX, deltaY))
-            print "robotPositionPx", robotPositionPx, "Orientation is ", theta, "delta x:", deltaX, "delta Y:", deltaY
+        # If the minimum error is too great, then we haven't found the robot
+        maximumAcceptableError = distanceBetweenMarkers # this says that we've got a 100% error
+        if minimumError is None or minimumError > maximumAcceptableError:
+            # We've failed to find the robot
+            robot.location = None
+            robot.orientation = None
+            if debug:
+                print "Failed to find robot:", robot
+            return
 
-        except Exception as e:
-            print "Exception thrown"
-            print e
+        # print "minimum error", minimumError
+
+        # Calculate the centre of the robot given the selected keypoints
+        keypoint1, keypoint2 = minimumErrorKeypoints
+        robot.location = (int((keypoint1.pt[0] + keypoint2.pt[0]) / 2), int((keypoint1.pt[1] + keypoint2.pt[1]) / 2))
+
+        # Calculate orientation of robot given selected keypoints
+        deltaX = keypoint1.pt[0] - keypoint2.pt[0]
+        deltaY = keypoint1.pt[1] - keypoint2.pt[1]
+        robot.orientation = math.degrees(math.atan2(deltaX, deltaY))
+
+        # Debugging if requested
+        if True:
+            print "robot:",robot
+
+    def updateLocations(self, frame, camera, debug=False):
+        '''Update the robots' locations.'''
+        self.findColouredBlobs(frame, debug)
+
+        for robot in self.robots:
+            #if robot.location is None:
+                self.findRobot(robot, camera, debug)
+
+        if True:
+            # Add circles around our robots
+            cv.circle(frame, robot.location, 20, (0,0,0), 2)
+
+            # Add a line to indicate the orientation
+            if robot.location is not None and robot.orientation is not None:
+                cv.line(frame, robot.location, (int(robot.location[0] + 20*math.sin(math.radians(robot.orientation))), int(robot.location[1] + 20*math.cos(math.radians(robot.orientation)))), (0,0,0), 3)
+
+
+
+
+
 
 
 fishEyeCamera = FishEyeCamera(0)
-robotDetector = RobotDetector(2)
+robotDetector = RobotDetector(numberOfColours=3)
 robotDetector.calibrateColour(fishEyeCamera)
 
-m1, sd1 = robotDetector.getMeanAndStdDevFromColourSamples([2,1,252])
-m2, sd2 = robotDetector.getMeanAndStdDevFromColourSamples([252,2,1])
-assert(m1==m2)
-
-print "sd1:", sd1, "sd2:",sd2
-assert(sd1 == sd2)
+# m1, sd1 = robotDetector.getMeanAndStdDevFromColourSamples([2,1,252])
+# m2, sd2 = robotDetector.getMeanAndStdDevFromColourSamples([252,2,1])
+# assert(m1==m2)
+#
+# print "sd1:", sd1, "sd2:",sd2
+# assert(sd1 == sd2)
 # print "mean:", m, "sd:",sd
 # cv.destroyAllWindows()
 # exit()
@@ -271,13 +334,18 @@ assert(sd1 == sd2)
 
 while True:
     undistortedFrame = fishEyeCamera.getUndistortedFrame()
-    cv.imshow("A Name", undistortedFrame)
-    cv.setMouseCallback("A Name", draw_circle)
+    cv.setMouseCallback("Undistorted Camera", draw_circle)
+
+    robotDetector.updateLocations(undistortedFrame, fishEyeCamera, debug=False)
+    cv.imshow("Processed Frame", undistortedFrame)
+
 
     # Convert to HSV
-    hsvFrame = cv.cvtColor(undistortedFrame,cv.COLOR_BGR2HSV_FULL) #
+    # hsvFrame = cv.cvtColor(undistortedFrame,cv.COLOR_BGR2HSV_FULL) #
 
-    robotDetector.findColouredBlobs(undistortedFrame, True)
+    # robotDetector.findColouredBlobs(undistortedFrame, True)
+
+
     # green = robotDetecter.findColouredPixels(hsvFrame, 2, 10) # Green
     # cv.imshow("Green", green)
 
