@@ -3,7 +3,7 @@ import numpy as np
 import time
 import math
 
-cam = cv.VideoCapture(0)
+cam = cv.VideoCapture(1)
 cam.set(3,1284)
 cam.set(4,720)
 
@@ -29,7 +29,7 @@ params.blobColor = 255
 
 # Filter by Area.
 params.filterByArea = True
-params.minArea = 200
+params.minArea = 150
 
 # Filter by Circularity
 params.filterByCircularity = False
@@ -56,8 +56,8 @@ while True:
     # Convert to HSV
     hsv_frame = cv.cvtColor(frame,cv.COLOR_BGR2HSV_FULL) #
 
-    lb = np.array([156, 50,50])
-    ub = np.array([184,255,255])
+    lb = np.array([130, 200,150])
+    ub = np.array([160,255,190])
     maskBlue = cv.inRange(hsv_frame,lb, ub)
     blu = cv.bitwise_and(frame,frame,mask=maskBlue)
     #
@@ -71,31 +71,38 @@ while True:
     # maskNotRed = cv.bitwise_not(maskRed)
     red = cv.bitwise_and(frame,frame,mask=maskNotRed)
 
-    lg = np.array([70, 50,50])
-    ug = np.array([100,255,255])
+    lg = np.array([15, 50,50])
+    ug = np.array([25,255,255])
     maskGreen = cv.inRange(hsv_frame,lg, ug)
     grn = cv.bitwise_and(frame,frame,mask=maskGreen)
 
     # cv.imshow("Logic Frames", (np.logical_and(hsv_frame[:,:,1]>110 , hsv_frame[:,:,1]<150)).astype('float'))
-    cv.imshow("Red", red)
-    cv.imshow("Green", grn)
-    #cv.imshow("Blue", blu)
+    # cv.imshow("Red", red)
+    # cv.imshow("Green", grn)
+    # cv.imshow("Blue", blu)
 
 
     # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
     # Detect red blobs
-    red_keypoints = detector.detect(red)
-    if len(red_keypoints) == 0:
-        continue
-    frame_with_keypoints = cv.drawKeypoints(frame, red_keypoints, np.array([]), (0, 0, 255),
-                                            cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    # red_keypoints = detector.detect(red)
+    # if len(red_keypoints) == 0:
+    #     continue
+    # frame_with_keypoints = cv.drawKeypoints(frame, red_keypoints, np.array([]), (0, 0, 255),
+    #                                         cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
     # Detect green blobs
     green_keypoints = detector.detect(grn)
     if len(green_keypoints) ==0:
         continue
-    frame_with_keypoints = cv.drawKeypoints(frame_with_keypoints, [green_keypoints[0]], np.array([]), (0, 255, 0),
+    frame_with_keypoints = cv.drawKeypoints(frame, [green_keypoints[0]], np.array([]), (0, 0, 0),
                                             cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+
+    # blue_keypoints = detector.detect(blu)
+    # if len(blue_keypoints) ==0:
+    #     continue
+    # frame_with_keypoints = cv.drawKeypoints(frame_with_keypoints, [blue_keypoints[0]], np.array([]), (255, 0, 0),
+    #                                         cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
     # # Calculate centre of robot
     # robotPositionPx = None
