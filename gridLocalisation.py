@@ -1,6 +1,6 @@
 import cv2 as cv
 import cameraLocalisation2D
-
+import gridMaker
 
 # Define a grid
 class Grid:
@@ -45,10 +45,10 @@ def findCornersFromBalls(balls):
         else:
             raise Exception("How'd we get here?")
 
-    return {"upperLeft": upperLeftBall,
-            "lowerLeft": lowerLeftBall,
-            "upperRight": upperRightBall,
-            "lowerRight": lowerRightBall}
+    return {"upperLeft": upperLeftBall.location,
+            "lowerLeft": lowerLeftBall.location,
+            "upperRight": upperRightBall.location,
+            "lowerRight": lowerRightBall.location}
 
 
 
@@ -64,18 +64,30 @@ if __name__ == "__main__":
     ballDetector.setCalibration(31.7, 2.6*3)
     ballDetector.calibrateInitialLocations(fishEyeCamera)
 
-    # Work out which balls represent which corner
-    corners = findCornersFromBalls(ballDetector.balls)
-    print corners
 
-    robotDetector = cameraLocalisation2D.RobotDetector(numberOfColours=3)
-    rectGrid = RectangularGrid()
+
+    robotDetector = cameraLocalisation2D.RobotDetector(numberOfColours=2)
+    # robotDetector.calibrateColour(fishEyeCamera)
+    # robotDetector.setCalibration([360.0, 140.5, 220.9], [15.7, 12.5, 8.6])
+    robotDetector.setCalibration([140.5, 220.9], [12.5, 8.6])
+
     while True:
         undistortedFrame = fishEyeCamera.getUndistortedFrame()
         ballDetector.updateLocations(undistortedFrame, fishEyeCamera, debug=False)
-        robotDetector.updateLocations(undistortedFrame, fishEyeCamera, debug=True)
+        robotDetector.updateLocations(undistortedFrame, fishEyeCamera, debug=False)
 
-        rectGrid.addGridToFrame(undistortedFrame, corners)
+        # Work out which balls represent which corner
+        corners = findCornersFromBalls(ballDetector.balls)
+
+        # Get corner points in order required by gridMaker
+        gridMakerCorners = [(int(corners["upperLeft"][0]), int(corners["upperLeft"][1])),
+                            (int(corners["upperRight"][0]), int(corners["upperRight"][1])),
+                            (int(corners["lowerLeft"][0]), int(corners["lowerLeft"][1])),
+                            (int(corners["lowerRight"][0]), int(corners["lowerRight"][1]))]
+
+        #rectGrid.addGridToFrame(undistortedFrame, corners)
+        gridMaker.draw(undistortedFrame, gridMakerCorners, (7,5))
+
 
         cv.imshow("Processed Frame", undistortedFrame)
         key = cv.waitKey(16) # 60 frames/sec

@@ -191,6 +191,8 @@ class RobotDetector:
         print "colourHeusBandDegrees: ", self.colourHeusBandDegrees
 
     def setCalibration(self, colourHuesDegrees, colourHeusBandDegrees):
+        assert len(colourHuesDegrees) == self.numberOfColours
+        assert len(colourHeusBandDegrees) == self.numberOfColours
         self.colourHuesDegrees = colourHuesDegrees
         self.colourHeusBandDegrees = colourHeusBandDegrees
 
