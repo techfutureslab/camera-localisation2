@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import glob
 
-cam = cv2.VideoCapture(1)
+cam = cv2.VideoCapture(0)
 cam.set(3,1280)
 cam.set(4,720)
 
