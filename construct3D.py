@@ -6,9 +6,9 @@ import numpy as np
 def drawlines(img1, img2, lines, pts1, pts2):
     ''' img1 - image on which we draw the epilines for the points in img2
         lines - corresponding epilines '''
-    r, c = img1.shape
-    img1 = cv2.cvtColor(img1, cv2.COLOR_GRAY2BGR)
-    img2 = cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
+    r, c = img1.shape[:2]
+    # img1 = cv2.cvtColor(img1, cv2.COLOR_GRAY2BGR)
+    # img2 = cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
     for r, pt1, pt2 in zip(lines, pts1, pts2):
         color = tuple(np.random.randint(0, 255, 3).tolist())
         x0, y0 = map(int, [0, -r[2] / r[1]])
@@ -52,6 +52,10 @@ if __name__ == "__main__":
         ballDetectorBlueSide.updateLocations(undistortedFrameSide, fishEyeCameraSide, debug=False)
         topBalls = ballDetectorOrangeTop.getBallsPointsAsTuples()+ballDetectorBlueTop.getBallsPointsAsTuples()
         sideBalls = ballDetectorOrangeSide.getBallsPointsAsTuples()+ballDetectorBlueSide.getBallsPointsAsTuples()
+
+        topBalls = np.int32(topBalls)
+        sideBalls = np.int32(sideBalls)
+
         F, mask = cv2.findFundamentalMat(topBalls,sideBalls,cv2.FM_8POINT)
 
         # Find epilines corresponding to points in right image (second image) and
@@ -59,16 +63,22 @@ if __name__ == "__main__":
         lines1 = cv2.computeCorrespondEpilines(sideBalls.reshape(-1, 1, 2), 2, F)
         lines1 = lines1.reshape(-1, 3)
         img5, img6 = drawlines(undistortedFrameTop, undistortedFrameSide, lines1, topBalls, sideBalls)
+        # drawing its lines on left image
+        lines2 = cv2.computeCorrespondEpilines(topBalls.reshape(-1, 1, 2), 1, F)
+        lines2 = lines2.reshape(-1, 3)
+        img3, img4 = drawlines(undistortedFrameSide, undistortedFrameTop, lines2, sideBalls, topBalls)
 
         cv2.imshow("Processed Frame Top", undistortedFrameTop)
         cv2.imshow("Processed Frame Side", undistortedFrameSide)
+        cv2.imshow("image 3", img3)
+        cv2.imshow("image 4", img4)
         cv2.imshow("image 5", img5)
         cv2.imshow("image 6", img6)
 
         wk = cv2.waitKey(1)
         if wk != -1:
-            print wk
-        if wk == 1048689: # q
+            print(wk)
+        if wk == 1048689 or wk==113: # q
             break
 
     cv2.destroyAllWindows()
