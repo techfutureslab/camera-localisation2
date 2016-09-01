@@ -414,7 +414,11 @@ class BallDetector:
         for i in range(self.numberOfBalls):
             self.balls.append( Ball() )
 
-
+    def getBallsPointsAsTuples(self):
+        result = []
+        for ball in self.balls:
+            result.append( ball.location )
+        return result
 
 
     def calibrateColour(self, camera, bandWidthInStdDevs=3):
