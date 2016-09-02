@@ -52,7 +52,7 @@ def line_intersection(line1, line2):
     d = (det(*line1), det(*line2))
     x = det(d, xdiff) / div
     y = det(d, ydiff) / div
-    return x, y
+    return int(x), int(y)
 
 
 def findMiddlePoints(uN,lN,lM,rM):
@@ -77,7 +77,7 @@ def pixel2Board(point):
 
 
 
-def draw(img, mPoint, segments):
+def draw(img, mPoint, segments=(3,4)):
     if len(mPoint) == 4:
         cv2.line(img, mPoint[0], mPoint[1], (0, 250, 0), 3)
         cv2.line(img, mPoint[2], mPoint[3], (0, 250, 0), 3)
@@ -119,4 +119,4 @@ if __name__ == "__main__":
         if cv2.waitKey(20) & 0xFF == ord('q'):
             break
     cv2.destroyAllWindows()
-    print mPoint
+    print(mPoint)
