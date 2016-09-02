@@ -16,9 +16,9 @@ def mouseSelection(event,x,y,flags,param):
     if event == cv.EVENT_RBUTTONDBLCLK:
         # cv.circle(img,(x,y),100,(255,0,0),-1)
         boxUpperLeft = (x,y)
-        print "x:",x,"y: ",y
+        print("x:",x,"y: ",y)
         # str = "BGR: {} /  HSV: {}".format( (frame[y,x,:]), (hsv[y,x,:]))
-        print str
+        print(str)
 
 ret, frame = cam.read()
 h, w = frame.shape[:2]
@@ -32,10 +32,10 @@ while True:
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV_FULL)
     wk = cv.waitKey(1)
     if wk != -1:
-        print wk
+        print(wk)
         if wk == 1048608:
             # print("hsv:", hsv_frame[320, 240, 0])
-            print("rgb:", frame[320, 240])
+            print(("rgb:", frame[320, 240]))
     if wk == 1048689:
         break
 

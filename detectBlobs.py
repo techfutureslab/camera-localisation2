@@ -141,14 +141,14 @@ while True:
     cv.imshow("Robot Location", frame_with_keypoints)
 
     endTime = time.time()
-    print "frames/sec: ", 1/(endTime-startTime)
+    print("frames/sec: ", 1/(endTime-startTime))
 
     wk = cv.waitKey(1)
     if wk != -1:
-        print wk
+        print(wk)
         if wk == 1048608:
-            print("hsv:", hsv_frame[320, 240,0])
-            print("rgb:", frame[320, 240])
+            print(("hsv:", hsv_frame[320, 240,0]))
+            print(("rgb:", frame[320, 240]))
     if wk == 1048689:
         break
 

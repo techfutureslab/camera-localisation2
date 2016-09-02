@@ -39,10 +39,10 @@ while True:
     cv.imshow("Blue", blu)
     wk = cv.waitKey(1)
     if wk != -1:
-        print wk
+        print(wk)
         if wk == 1048608:
-            print("hsv:", hsv_frame[320, 240,0])
-            print("rgb:", frame[320, 240])
+            print(("hsv:", hsv_frame[320, 240,0]))
+            print(("rgb:", frame[320, 240]))
     if wk == 1048689:
         break
 

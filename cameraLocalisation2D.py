@@ -109,8 +109,8 @@ class RobotDetector:
         # Calculate robot indicies
         assert (numberOfColours >= 2)
         self.robots = []
-        for c1 in xrange(numberOfColours):
-            for c2 in xrange(c1+1, numberOfColours):
+        for c1 in range(numberOfColours):
+            for c2 in range(c1+1, numberOfColours):
                 self.robots.append(Robot((c1,c2)))
 
 
@@ -130,7 +130,7 @@ class RobotDetector:
 
         # Find the minimum of the two deltas
         deltaColourSamples = []
-        for i in xrange(len(deltaDownColourSamples)):
+        for i in range(len(deltaDownColourSamples)):
             if abs(deltaDownColourSamples[i]) <= abs(deltaUpColourSamples[i]):
                 deltaColourSamples.append(deltaDownColourSamples[i])
             else:
@@ -154,12 +154,12 @@ class RobotDetector:
         self.colourHuesDegrees = []
         self.colourHeusBandDegrees = []
 
-        print "Calibrate the",self.numberOfColours,"colours.  Click on colour samples, press space when done for each colour."
+        print("Calibrate the",self.numberOfColours,"colours.  Click on colour samples, press space when done for each colour.")
 
         def mouseCallbackGetColour(event, x, y, flags, param):
             if event == cv.EVENT_LBUTTONDOWN:
                 colourValue = hsvFrame[y, x]
-                print colourValue
+                print(colourValue)
                 colourSamples.append(colourValue[0])
 
         for i in range(self.numberOfColours):
@@ -179,7 +179,7 @@ class RobotDetector:
                 if key == 1048608:  # space
                     # Calculate mean and standard deviation of colour samples
                     meanColourDegrees, sdColourDegrees = self.getMeanAndStdDevFromColourSamples(colourSamples)
-                    print "mean colour (degrees): ",meanColourDegrees, "sd:", sdColourDegrees
+                    print("mean colour (degrees): ",meanColourDegrees, "sd:", sdColourDegrees)
 
                     self.colourHuesDegrees.append(meanColourDegrees) # convert to degrees
                     self.colourHeusBandDegrees.append(sdColourDegrees * bandWidthInStdDevs)
@@ -187,8 +187,8 @@ class RobotDetector:
                     break
 
     def displayCalibration(self):
-        print "colourHuesDegrees: ", self.colourHuesDegrees
-        print "colourHeusBandDegrees: ", self.colourHeusBandDegrees
+        print("colourHuesDegrees: ", self.colourHuesDegrees)
+        print("colourHeusBandDegrees: ", self.colourHeusBandDegrees)
 
     def setCalibration(self, colourHuesDegrees, colourHeusBandDegrees):
         assert len(colourHuesDegrees) == self.numberOfColours
@@ -288,7 +288,7 @@ class RobotDetector:
             robot.location = None
             robot.orientation = None
             if debug:
-                print "Failed to find robot:", robot
+                print("Failed to find robot:", robot)
             return
 
         # print "minimum error", minimumError
@@ -304,7 +304,7 @@ class RobotDetector:
 
         # Debugging if requested
         if debug:
-            print "robot:",robot
+            print("robot:",robot)
 
     def updateLocations(self, frame, camera, debug=False):
         '''Update the robots' locations.'''
@@ -338,7 +338,7 @@ def getMeanAndStdDevFromColourSamples(colourSamples):
 
     # Find the minimum of the two deltas
     deltaColourSamples = []
-    for i in xrange(len(deltaDownColourSamples)):
+    for i in range(len(deltaDownColourSamples)):
         if abs(deltaDownColourSamples[i]) <= abs(deltaUpColourSamples[i]):
             deltaColourSamples.append(deltaDownColourSamples[i])
         else:
@@ -425,12 +425,12 @@ class BallDetector:
         self.colourHuesDegrees = []
         self.colourHeusBandDegrees = []
 
-        print "Calibrate the balls' colour.  Click on colour samples, press space when done."
+        print("Calibrate the balls' colour.  Click on colour samples, press space when done.")
 
         def mouseCallbackGetColour(event, x, y, flags, param):
             if event == cv.EVENT_LBUTTONDOWN:
                 colourValue = hsvFrame[y, x]
-                print colourValue
+                print(colourValue)
                 colourSamples.append(colourValue[0])
 
         colourSamples = []
@@ -449,7 +449,7 @@ class BallDetector:
             if key == 1048608:  # space
                 # Calculate mean and standard deviation of colour samples
                 meanColourDegrees, sdColourDegrees = getMeanAndStdDevFromColourSamples(colourSamples)
-                print "mean colour (degrees): ", meanColourDegrees, "sd:", sdColourDegrees
+                print("mean colour (degrees): ", meanColourDegrees, "sd:", sdColourDegrees)
 
                 self.colourHueDegrees = meanColourDegrees
                 self.colourHeuBandDegrees = sdColourDegrees * bandWidthInStdDevs
@@ -457,12 +457,12 @@ class BallDetector:
                 break
 
     def calibrateInitialLocations(self, camera):
-        print "Calibrate the balls' initial positions.  Click on the centres of the balls."
+        print("Calibrate the balls' initial positions.  Click on the centres of the balls.")
 
         def mouseCallbackGetColour(event, x, y, flags, param):
             if event == cv.EVENT_LBUTTONDOWN:
                 ballLocation = (x,y)
-                print "ball location:", ballLocation
+                print("ball location:", ballLocation)
                 ballLocations.append(ballLocation)
 
         ballLocations = []
@@ -484,8 +484,8 @@ class BallDetector:
         pass
 
     def displayCalibration(self):
-        print "colourHueDegrees: ", self.colourHueDegrees
-        print "colourHeuBandDegrees: ", self.colourHeuBandDegrees
+        print("colourHueDegrees: ", self.colourHueDegrees)
+        print("colourHeuBandDegrees: ", self.colourHeuBandDegrees)
 
     def setCalibration(self, colourHueDegrees, colourHeuBandDegrees):
         self.colourHueDegrees = colourHueDegrees
@@ -554,7 +554,7 @@ class BallDetector:
 
     def findBallWithKnownLocation(self, ball, camera, debug=False):
         if debug:
-            print "looking for ball with previous location of", ball.location
+            print("looking for ball with previous location of", ball.location)
         # If the minimum delta is too great, then we haven't found the ball
         self.maxDelta = 50 # mm per frame
 
@@ -578,12 +578,12 @@ class BallDetector:
         if ball.minimumDelta is None:
             # We've failed to find the ball
             if debug:
-                print "Failed to find ball at previous location:", ball.location
+                print("Failed to find ball at previous location:", ball.location)
             return
         else:
             # We've found the ball, update its current position
             if debug:
-                print "Found ball at previous location:", ball.location, "change in position of", ball.minimumDelta, "new position:", ball.minimumDeltaLocation
+                print("Found ball at previous location:", ball.location, "change in position of", ball.minimumDelta, "new position:", ball.minimumDeltaLocation)
             ball.location = ball.minimumDeltaLocation
 
 
@@ -596,7 +596,7 @@ class BallDetector:
 
         for ball in self.balls:
             if ball.location is None:
-                print "The balls' initial locations should be specified and not found automatically."
+                print("The balls' initial locations should be specified and not found automatically.")
                 self.findBall(ball, camera, debug)
             else:
                 self.findBallWithKnownLocation(ball, camera, debug)
@@ -625,7 +625,7 @@ if __name__ == "__main__":
 
         wk = cv.waitKey(1)
         if wk != -1:
-            print wk
+            print(wk)
         if wk == 1048689: # q
             break
 
@@ -648,7 +648,7 @@ if __name__ == "__main__":
 
         wk = cv.waitKey(1)
         if wk != -1:
-            print wk
+            print(wk)
         if wk == 1048689: # q
             break
 
@@ -692,7 +692,7 @@ if __name__ == "__main__":
 
         wk = cv.waitKey(1)
         if wk != -1:
-            print wk
+            print(wk)
         if wk == 1048689: # q
             break
 

@@ -1,8 +1,8 @@
 import cameraLocalisation2D
-import SocketServer
+import socketserver
 import cv2 as cv
 
-class Handler(SocketServer.BaseRequestHandler):
+class Handler(socketserver.BaseRequestHandler):
     def setup(self):
         self.fishEyeCamera = cameraLocalisation2D.FishEyeCamera(deviceID=1)
         self.robotDetector = cameraLocalisation2D.RobotDetector(numberOfColours=3)
@@ -29,7 +29,7 @@ class Handler(SocketServer.BaseRequestHandler):
 
             key = cv.waitKey(16)  # 60 frames/sec
             if key != -1:
-                print key
+                print(key)
             if key == 1048689:  # q
                 break
 
@@ -51,8 +51,8 @@ if __name__ == "__main__":
     host = "localhost"
     port = 9999
 
-    server = SocketServer.TCPServer((host, port), Handler)
+    server = socketserver.TCPServer((host, port), Handler)
 
-    print "Starting Server"
+    print("Starting Server")
     server.serve_forever()
-    print "Server Finished"
+    print("Server Finished")

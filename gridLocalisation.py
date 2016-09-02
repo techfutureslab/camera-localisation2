@@ -92,7 +92,7 @@ if __name__ == "__main__":
         cv.imshow("Processed Frame", undistortedFrame)
         key = cv.waitKey(16) # 60 frames/sec
         if key != -1:
-            print key
+            print(key)
         if key == 1048689:  # q
             break
     exit()

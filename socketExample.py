@@ -13,4 +13,4 @@ s.send(MESSAGE)
 data =None
 s.close()
 
-print("received data:", data)
+print(("received data:", data))

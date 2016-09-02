@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
         wk = cv.waitKey(1)
         if wk != -1:
-            print wk
+            print(wk)
         if wk == 1048689: # q
             break
 

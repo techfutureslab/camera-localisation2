@@ -19,10 +19,10 @@ def mouse_click(event,x,y,flags,param):
     global upperLeftCorner
     global lowerRightCorner
     if event == cv2.EVENT_LBUTTONDOWN:
-        print "Mouse down at location ", x,y
+        print("Mouse down at location ", x,y)
         upperLeftCorner = (x,y)
     if event == cv2.EVENT_LBUTTONUP:
-        print "Mouse up at location ", x,y
+        print("Mouse up at location ", x,y)
         lowerRightCorner = (x,y)
 
 # Create a black image, a window and bind the function to window
@@ -43,7 +43,7 @@ while True:
     if key ==  1048689:  # q
         break
     elif key != -1:
-        print key
+        print(key)
 
 cv2.destroyAllWindows()
 cam.release()

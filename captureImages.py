@@ -11,7 +11,7 @@ cam.set(4,720)
 ret, frame = cam.read()
 
 h, w = frame.shape[:2]
-print "Start Capturing"
+print("Start Capturing")
 cntr = 0
 while True:
     ret, frame = cam.read()
@@ -31,12 +31,12 @@ while True:
             # Capture image
             cntr += 1
             filename = "Image"+str(cntr)+".png"
-            print "Writing", filename
+            print("Writing", filename)
             cv2.imwrite(filename,frame)
         else:
-            print "Failed to find chessboard"
+            print("Failed to find chessboard")
     elif key != -1:
-        print key
+        print(key)
 
 cv2.destroyAllWindows()
 cam.release()
