@@ -94,7 +94,7 @@ class RobotDetector:
         # Create SimpleBlobDetector (assumes OpenCV version 3)
         params = createDetectorParameters()
         self.detector = cv.SimpleBlobDetector_create(params)
-        self.colourHuesDegrees = [hue for hue in range(0,255,255/self.numberOfColours)]
+        self.colourHuesDegrees = [hue for hue in range(0,255,int(255/self.numberOfColours))]
         self.colourHeusBandDegrees = [10]*numberOfColours
 
         class Robot:
