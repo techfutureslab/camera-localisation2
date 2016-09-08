@@ -19,11 +19,11 @@ def mouseSelection(event,x,y,flags,param):
     if event == cv2.EVENT_LBUTTONDOWN:
         # cv.circle(img,(x,y),100,(255,0,0),-1)
         boxUpperLeft = (x,y)
-        print "x:",x,"y: ",y
+        print("x:",x,"y: ",y)
     elif event==cv2.EVENT_MOUSEMOVE:
         if boxUpperLeft is not None:
-            print "Mouse moved"
-            print x,y
+            print("Mouse moved")
+            print(x,y)
             movedX = x
             movedY = y
     elif event ==cv2.EVENT_LBUTTONUP:
@@ -69,7 +69,7 @@ while True:
     if key == 1048689:  # q
         break
     elif key != -1:
-        print key
+        print(key)
 
 cv2.destroyAllWindows()
 cam.release()

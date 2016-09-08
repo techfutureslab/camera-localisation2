@@ -5,7 +5,7 @@ This module contains some common routines used by other samples.
 '''
 
 # Python 2/3 compatibility
-from __future__ import print_function
+
 import sys
 PY3 = sys.version_info[0] == 3
 
@@ -218,11 +218,11 @@ def mosaic(w, imgs):
     if PY3:
         img0 = next(imgs)
     else:
-        img0 = imgs.next()
+        img0 = next(imgs)
     pad = np.zeros_like(img0)
     imgs = it.chain([img0], imgs)
     rows = grouper(w, imgs, pad)
-    return np.vstack(map(np.hstack, rows))
+    return np.vstack(list(map(np.hstack, rows)))
 
 def getsize(img):
     h, w = img.shape[:2]

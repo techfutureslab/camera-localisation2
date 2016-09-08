@@ -119,4 +119,4 @@ if __name__ == "__main__":
         if cv2.waitKey(20) & 0xFF == ord('q'):
             break
     cv2.destroyAllWindows()
-    print mPoint
+    print(mPoint)

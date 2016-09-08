@@ -14,7 +14,7 @@ cam.set(4,720)
 ret, frame = cam.read()
 
 h, w = frame.shape[:2]
-print "Start Capturing"
+print("Start Capturing")
 cntr = 0
 while True:
     ret, frame = cam.read()
@@ -23,7 +23,7 @@ while True:
 
     wk = cv.waitKey(1)
     if wk!=-1:
-        print wk
+        print(wk)
     if wk == 1048689:
         break
 

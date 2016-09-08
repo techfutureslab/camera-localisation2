@@ -86,13 +86,13 @@ if __name__ == "__main__":
                             (int(corners["lowerRight"][0]), int(corners["lowerRight"][1]))]
 
         #rectGrid.addGridToFrame(undistortedFrame, corners)
-        gridMaker.draw(undistortedFrame, gridMakerCorners, (7,5))
+        gridMaker.draw(undistortedFrame, gridMakerCorners, (5,5))
 
 
         cv.imshow("Processed Frame", undistortedFrame)
         key = cv.waitKey(16) # 60 frames/sec
         if key != -1:
-            print key
+            print(key)
         if key == 1048689:  # q
             break
     exit()

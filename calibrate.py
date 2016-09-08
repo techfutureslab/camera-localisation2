@@ -14,7 +14,7 @@ default values:
 '''
 
 # Python 2/3 compatibility
-from __future__ import print_function
+
 
 import numpy as np
 import cv2
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     args.setdefault('--debug', './output/')
     args.setdefault('--square_size', 1.0)
     if not img_mask:
-        img_mask = '../data/left*.jpg'  # default
+        img_mask = 'Image*.png'  # default
     else:
         img_mask = img_mask[0]
 

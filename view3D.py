@@ -24,7 +24,7 @@ while True:
     if key ==  1048689:  # q
         break
     elif key != -1:
-        print key
+        print(key)
 
 cv2.destroyAllWindows()
 cam.release()
