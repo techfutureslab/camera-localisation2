@@ -15,20 +15,34 @@ def draw_circle(event,x,y,flags,param):
 class FishEyeCamera:
     def __init__(self, deviceID=0):
         # The fish-eye cameras support 720p and their angle-of-view is affected by the resolution
-        self.height = 720
-        self.width = 1280
+        # self.height = 720
+        # self.width = 1280
+        self.height = 480
+        self.width = 640
+
 
         # Open camera
         self.captureVideo(deviceID)
 
-        # Camera calibration parameters obtained 2016-08-11 (by Mohsen and Matthew) using captureImages.py and calibrate.py
-        self.cameraMatrix = np.array([[416.25456303, 0., 663.64459394], [0., 387.2264034, 380.49903696], [0., 0., 1.]])
-        self.distortionCoefficients = np.array([2.00198060e-01, -2.28216265e-01, 2.26068631e-04, -5.00177586e-04, 5.84619782e-02])
-        self.newCameraMatrix, _ = cv.getOptimalNewCameraMatrix(self.cameraMatrix,
-                                                               self.distortionCoefficients,
-                                                               (self.width, self.height),
-                                                               1,
-                                                               (self.width, self.height))
+        if self.height ==720:
+            # Camera calibration parameters obtained 2016-08-11 (by Mohsen and Matthew) using captureImages.py and calibrate.py
+            self.cameraMatrix = np.array([[416.25456303, 0., 663.64459394], [0., 387.2264034, 380.49903696], [0., 0., 1.]])
+            self.distortionCoefficients = np.array([2.00198060e-01, -2.28216265e-01, 2.26068631e-04, -5.00177586e-04, 5.84619782e-02])
+            self.newCameraMatrix, _ = cv.getOptimalNewCameraMatrix(self.cameraMatrix,
+                                                                   self.distortionCoefficients,
+                                                                   (self.width, self.height),
+                                                                   1,
+                                                                   (self.width, self.height))
+        elif self.height == 480:
+            # Camera calibration parameters obtained 2016-08-11 (by Mohsen and Matthew) using captureImages.py and calibrate.py
+            self.cameraMatrix = np.array([[254.35663264,    0.,          331.98117752], [0., 238.03212471,  251.28182303], [0., 0., 1.]])
+            self.distortionCoefficients = np.array([0.16687251, -0.18482639, -0.00030592,  0.00256979,  0.04673033])
+            self.newCameraMatrix, _ = cv.getOptimalNewCameraMatrix(self.cameraMatrix,
+                                                                   self.distortionCoefficients,
+                                                                   (self.width, self.height),
+                                                                   1,
+                                                                   (self.width, self.height))
+
 
         # TODO: The calibration parameters should really allow the undistorted image to be in real-world units.
         # For the meantime, we need to be able to convert from pixels to real-world units
