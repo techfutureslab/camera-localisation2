@@ -15,36 +15,20 @@ def draw_circle(event,x,y,flags,param):
 class FishEyeCamera:
     def __init__(self, deviceID=0):
         # The fish-eye cameras support 720p and their angle-of-view is affected by the resolution
-        # self.height = 480
-        # self.width = 640
         self.height = 720
         self.width = 1280
 
-        # self.captureVideo(deviceID)
+        # Open camera
         self.captureVideo(deviceID)
 
         # Camera calibration parameters obtained 2016-08-11 (by Mohsen and Matthew) using captureImages.py and calibrate.py
-        # # Undistorted Image parameters for 640x480
-        if self.height == 480:
-
-            self.cameraMatrix = np.array([[254.35663264,    0.,          331.98117752], [0., 238.03212471,  251.28182303], [0., 0., 1.]])
-            self.distortionCoefficients = np.array([0.16687251, -0.18482639, -0.00030592,  0.00256979 , 0.04673033])
-            self.newCameraMatrix, _ = cv.getOptimalNewCameraMatrix(self.cameraMatrix,
-                                                                   self.distortionCoefficients,
-                                                                   (self.width, self.height),
-                                                                   1,
-                                                                   (self.width, self.height))
-        elif self.height ==720:
-            # Camera calibration parameters obtained 2016-08-11 (by Mohsen and Matthew) using captureImages.py and calibrate.py
-            # # Undistorted Image parameters for 1280x720
-            self.cameraMatrix = np.array([[416.25456303, 0., 663.64459394], [0., 387.2264034, 380.49903696], [0., 0., 1.]])
-            self.distortionCoefficients = np.array([2.00198060e-01, -2.28216265e-01, 2.26068631e-04, -5.00177586e-04, 5.84619782e-02])
-            self.newCameraMatrix, _ = cv.getOptimalNewCameraMatrix(self.cameraMatrix,
-                                                                   self.distortionCoefficients,
-                                                                   (self.width, self.height),
-                                                                   1,
-                                                                   (self.width, self.height))
-
+        self.cameraMatrix = np.array([[416.25456303, 0., 663.64459394], [0., 387.2264034, 380.49903696], [0., 0., 1.]])
+        self.distortionCoefficients = np.array([2.00198060e-01, -2.28216265e-01, 2.26068631e-04, -5.00177586e-04, 5.84619782e-02])
+        self.newCameraMatrix, _ = cv.getOptimalNewCameraMatrix(self.cameraMatrix,
+                                                               self.distortionCoefficients,
+                                                               (self.width, self.height),
+                                                               1,
+                                                               (self.width, self.height))
 
         # TODO: The calibration parameters should really allow the undistorted image to be in real-world units.
         # For the meantime, we need to be able to convert from pixels to real-world units
@@ -55,6 +39,7 @@ class FishEyeCamera:
         self.camera = cv.VideoCapture(deviceID)
         self.camera.set(cv.CAP_PROP_FRAME_WIDTH, self.width)
         self.camera.set(cv.CAP_PROP_FRAME_HEIGHT, self.height)
+
         ret, frame = self.camera.read()
         h, w = frame.shape[:2]
         assert ret
@@ -109,7 +94,7 @@ class RobotDetector:
         # Create SimpleBlobDetector (assumes OpenCV version 3)
         params = createDetectorParameters()
         self.detector = cv.SimpleBlobDetector_create(params)
-        self.colourHuesDegrees = [hue for hue in range(0,255,int(255/self.numberOfColours))]
+        self.colourHuesDegrees = [hue for hue in range(0,255,255/self.numberOfColours)]
         self.colourHeusBandDegrees = [10]*numberOfColours
 
         class Robot:
@@ -169,7 +154,7 @@ class RobotDetector:
         self.colourHuesDegrees = []
         self.colourHeusBandDegrees = []
 
-        print("Calibrate the",self.numberOfColours,"colours.  Click on colour samples, press space when done for each colour.")
+        print(("Calibrate the",self.numberOfColours,"colours.  Click on colour samples, press space when done for each colour."))
 
         def mouseCallbackGetColour(event, x, y, flags, param):
             if event == cv.EVENT_LBUTTONDOWN:
@@ -194,7 +179,7 @@ class RobotDetector:
                 if key == 1048608:  # space
                     # Calculate mean and standard deviation of colour samples
                     meanColourDegrees, sdColourDegrees = self.getMeanAndStdDevFromColourSamples(colourSamples)
-                    print("mean colour (degrees): ",meanColourDegrees, "sd:", sdColourDegrees)
+                    print(("mean colour (degrees): ",meanColourDegrees, "sd:", sdColourDegrees))
 
                     self.colourHuesDegrees.append(meanColourDegrees) # convert to degrees
                     self.colourHeusBandDegrees.append(sdColourDegrees * bandWidthInStdDevs)
@@ -202,8 +187,8 @@ class RobotDetector:
                     break
 
     def displayCalibration(self):
-        print("colourHuesDegrees: ", self.colourHuesDegrees)
-        print("colourHeusBandDegrees: ", self.colourHeusBandDegrees)
+        print(("colourHuesDegrees: ", self.colourHuesDegrees))
+        print(("colourHeusBandDegrees: ", self.colourHeusBandDegrees))
 
     def setCalibration(self, colourHuesDegrees, colourHeusBandDegrees):
         assert len(colourHuesDegrees) == self.numberOfColours
@@ -303,7 +288,7 @@ class RobotDetector:
             robot.location = None
             robot.orientation = None
             if debug:
-                print("Failed to find robot:", robot)
+                print(("Failed to find robot:", robot))
             return
 
         # print "minimum error", minimumError
@@ -319,7 +304,7 @@ class RobotDetector:
 
         # Debugging if requested
         if debug:
-            print("robot:",robot)
+            print(("robot:",robot))
 
     def updateLocations(self, frame, camera, debug=False):
         '''Update the robots' locations.'''
@@ -464,7 +449,7 @@ class BallDetector:
             if key == 1048608:  # space
                 # Calculate mean and standard deviation of colour samples
                 meanColourDegrees, sdColourDegrees = getMeanAndStdDevFromColourSamples(colourSamples)
-                print("mean colour (degrees): ", meanColourDegrees, "sd:", sdColourDegrees)
+                print(("mean colour (degrees): ", meanColourDegrees, "sd:", sdColourDegrees))
 
                 self.colourHueDegrees = meanColourDegrees
                 self.colourHeuBandDegrees = sdColourDegrees * bandWidthInStdDevs
@@ -477,7 +462,7 @@ class BallDetector:
         def mouseCallbackGetColour(event, x, y, flags, param):
             if event == cv.EVENT_LBUTTONDOWN:
                 ballLocation = (x,y)
-                print("ball location:", ballLocation)
+                print(("ball location:", ballLocation))
                 ballLocations.append(ballLocation)
 
         ballLocations = []
@@ -499,8 +484,8 @@ class BallDetector:
         pass
 
     def displayCalibration(self):
-        print("colourHueDegrees: ", self.colourHueDegrees)
-        print("colourHeuBandDegrees: ", self.colourHeuBandDegrees)
+        print(("colourHueDegrees: ", self.colourHueDegrees))
+        print(("colourHeuBandDegrees: ", self.colourHeuBandDegrees))
 
     def setCalibration(self, colourHueDegrees, colourHeuBandDegrees):
         self.colourHueDegrees = colourHueDegrees
@@ -567,11 +552,12 @@ class BallDetector:
     def findBall(self, ball, camera, debug=False):
         pass
 
-    def findBallWithKnownLocation(self, ball, camera, maxDelta=50, debug=False):
+    def findBallWithKnownLocation(self, ball, camera, debug=False):
         if debug:
-            print("looking for ball with previous location of", ball.location)
-
+            print(("looking for ball with previous location of", ball.location))
         # If the minimum delta is too great, then we haven't found the ball
+        self.maxDelta = 50 # mm per frame
+
         ball.minimumDelta = None
 
         for keypoint in self.keypoints:
@@ -585,26 +571,26 @@ class BallDetector:
 
             delta = abs(distance)
             if ball.minimumDelta is None or delta < ball.minimumDelta:
-                if delta < maxDelta:
+                if delta < self.maxDelta:
                     ball.minimumDelta = delta
                     ball.minimumDeltaLocation = keypoint.pt
 
         if ball.minimumDelta is None:
             # We've failed to find the ball
             if debug:
-                print("Failed to find ball at previous location:", ball.location)
+                print(("Failed to find ball at previous location:", ball.location))
             return
         else:
             # We've found the ball, update its current position
             if debug:
-                print("Found ball at previous location:", ball.location, "change in position of", ball.minimumDelta, "new position:", ball.minimumDeltaLocation)
+                print(("Found ball at previous location:", ball.location, "change in position of", ball.minimumDelta, "new position:", ball.minimumDeltaLocation))
             ball.location = ball.minimumDeltaLocation
 
 
 
 
 
-    def updateLocations(self, frame, camera, maxDelta=50, debug=False):
+    def updateLocations(self, frame, camera, debug=False):
         '''Update the balls' locations.'''
         self.findColouredBlobs(frame, debug)
 
@@ -613,7 +599,7 @@ class BallDetector:
                 print("The balls' initial locations should be specified and not found automatically.")
                 self.findBall(ball, camera, debug)
             else:
-                self.findBallWithKnownLocation(ball, camera, maxDelta, debug)
+                self.findBallWithKnownLocation(ball, camera, debug)
 
             if True:
                 # Add circles around our balls
